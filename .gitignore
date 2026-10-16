@@ -1,7 +1,28 @@
-# .gitignore
-venv/
-__pycache__/
-*.pyc
+cat > .gitignore <<'EOF'
+# Secrets and credentials
 .env
 *.pem
 *.key
+*.crt
+docker/volumes/
+
+# Wazuh runtime data
+wazuh/logs/
+wazuh/queue/
+wazuh/etc/client.keys
+
+# Python
+__pycache__/
+venv/
+.venv/
+*.pyc
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+EOF
+
+# Custom
+other/

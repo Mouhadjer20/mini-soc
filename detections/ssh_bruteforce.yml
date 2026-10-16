@@ -1,0 +1,23 @@
+title: SSH Brute Force
+id: 8f3e2a1b-4c5d-6e7f-8a9b-0c1d2e3f4a5b
+status: experimental
+description: Detects multiple failed SSH login attempts from the same source IP within a short time window.
+author: Mouhadjer
+date: 7/10/2026
+references:
+  - https://attack.mitre.org/techniques/T1110/001/
+logsource:
+  product: linux
+  service: sshd
+detection:
+  selection:
+    EventID: 'sshd'
+    action: 'failed'
+  condition: selection | count(srcip) > 8 by srcip within 120s
+falsepositives:
+  - Legitimate user forgetting password
+  - Misconfigured automation with stale credentials
+level: high
+tags:
+  - attack.credential_access
+  - attack.t1110.001

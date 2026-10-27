@@ -1,0 +1,34 @@
+<group name="sshd,bruteforce,">
+    <!-- No alert. It just tags events so a composite rule can count them -->
+    <rule id="100010" level="0">
+        <if_sid>5710</if_sid>
+        <description>SSH failed auth (invalid user)</description>
+        <group>sshd_failed,</group>
+    </rule>
+    <!-- Tier 1a: Invalid-user spray (enumeration) -->
+    <rule id="100001" level="13" frequency="10" timeframe="120">
+        <if_matched_sid>100010</if_matched_sid>
+        <same_source_ip/>
+        <description>SSH user enumeration from $(srcip) — 10+ invalid-user attempts</description>
+        <mitre><id>T1110.001</id></mitre>
+        <group>credential_access,recon,</group>
+    </rule>
+
+    <!-- Tier 1b: Valid-user password guessing -->
+    <rule id="100002" level="10" frequency="8" timeframe="120">
+        <if_matched_sid>5716</if_matched_sid>
+        <same_source_ip/>
+        <description>SSH password guessing against valid accounts from $(srcip)</description>
+        <mitre><id>T1110.001</id></mitre>
+        <group>credential_access,bruteforce,</group>
+    </rule>
+
+    <!-- Tier 2: Escalation — either of the above, sustained -->
+    <rule id="100003" level="13" frequency="3" timeframe="600">
+        <if_matched_sid>100001</if_matched_sid>
+        <same_source_ip/>
+        <description>CRITICAL: Sustained SSH brute force from $(srcip) — escalating</description>
+        <mitre><id>T1110.001</id></mitre>
+        <group>credential_access,bruteforce,critical,</group>
+    </rule>
+</group>

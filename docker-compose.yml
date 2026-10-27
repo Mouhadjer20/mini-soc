@@ -1,0 +1,56 @@
+version: '3.7'
+
+services:
+  wazuh.manager: # Analyzes collected security events, applies detection rules, and manages Wazuh agents.
+    image: wazuh/wazuh-manager
+    hostname: wazuh.manager
+    restart: always
+    ports:
+      - "1514:1514" # Agents
+      - "1515:1515" # Enrollment
+      - "514:514/udp" # Syslog
+      - "55000:55000" # API
+    environment:
+      - INDEXER_URL=https://wazuh.indexer:9200              # Wazuh indexer URL
+      - INDEXER_USERNAME=admin                              # Wazuh indexer Username
+      - INDEXER_PASSWORD=SecretPassword                     # Wazuh indexer Password
+      - FILEBEAT_SSL_VERIFICATION_MODE=full                 # Filebeat SSL Verification mode (full or none)
+      - SSL_CERTIFICATE_AUTHORITIES=/etc/ssl/root-ca.pem
+      - SSL_CERTIFICATE=/etc/ssl/filebeat.pem
+      - SSL_KEY=/etc/ssl/filebeat.key
+    volumes:
+      - wazuh_api_configuration:/var/ossec/api/configuration
+      - wazuh_etc:/var/ossec/etc
+      - wazuh_logs:/var/ossec/logs
+      - wazuh_queue:/var/ossec/queue
+      - wazuh_var_multigroups:/var/ossec/var/multigroups
+      - wazuh_integrations:/var/ossec/integrations
+      - wazuh_active_response:/var/ossec/active-response/bin
+      - wazuh_agentless:/var/ossec/agentless
+      - wazuh_wodles:/var/ossec/wodles
+  
+  wazuh.indexer: # Stores and indexes security data collected by the Wazuh manager.
+    image: wazuh/wazuh-indexer
+    hostname: wazuh.indexer
+    restart: always
+    ports:
+      - "9200:9200"
+    environment:
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - wazuh-indexer-data:/var/lib/wazuh-indexer
+
+  wazuh.dashboard: # Centralized web interface for monitoring, searching, and managing Wazuh.
+    image: wazuh/wazuh-dashboard
+    hostname: wazuh.dashboard
+    restart: always
+    ports:
+      - "443:5601"
+    environment:
+      - INDEXER_USERNAME=admin
+      - INDEXER_PASSWORD=SecretPassword
+      - WAZUH_API_URL=https://wazuh.manager
+      - DASHBOARD_USERNAME=kibanaserver
+      - DASHBOARD_PASSWORD=kibanaserver
+    volumes:
+      - wazuh-dashboard-config:/usr/share/wazuh-dashboard/data/wazuh/config

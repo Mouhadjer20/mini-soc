@@ -1,34 +1,16 @@
-<group name="sshd,bruteforce,">
-    <!-- No alert. It just tags events so a composite rule can count them -->
-    <rule id="100010" level="0">
-        <if_sid>5710</if_sid>
-        <description>SSH failed auth (invalid user)</description>
-        <group>sshd_failed,</group>
+<group name="account_creation,">
+    <rule id="100010" level="3">
+        <if_sid>5502,5901,5902,554</if_sid>
+        <description>FIM: /etc/passwd or group or shadow modified (Create new user)</description>
+        <group>account_creation,</group>
     </rule>
-    <!-- Tier 1a: Invalid-user spray (enumeration) -->
-    <rule id="100001" level="13" frequency="10" timeframe="120">
+
+    <rule id="100011" level="12" frequency="5" timeframe="60">
         <if_matched_sid>100010</if_matched_sid>
-        <same_source_ip/>
-        <description>SSH user enumeration from $(srcip) — 10+ invalid-user attempts</description>
-        <mitre><id>T1110.001</id></mitre>
-        <group>credential_access,recon,</group>
-    </rule>
-
-    <!-- Tier 1b: Valid-user password guessing -->
-    <rule id="100002" level="10" frequency="8" timeframe="120">
-        <if_matched_sid>5716</if_matched_sid>
-        <same_source_ip/>
-        <description>SSH password guessing against valid accounts from $(srcip)</description>
-        <mitre><id>T1110.001</id></mitre>
-        <group>credential_access,bruteforce,</group>
-    </rule>
-
-    <!-- Tier 2: Escalation — either of the above, sustained -->
-    <rule id="100003" level="13" frequency="3" timeframe="600">
-        <if_matched_sid>100001</if_matched_sid>
-        <same_source_ip/>
-        <description>CRITICAL: Sustained SSH brute force from $(srcip) — escalating</description>
-        <mitre><id>T1110.001</id></mitre>
-        <group>credential_access,bruteforce,critical,</group>
+        <description>Multiple /etc/passwd changes within 60s — bulk account creation on $(hostname)</description>
+        <mitre>
+            <id>T1136.001</id>
+        </mitre>
+        <group>persistence,account_creation,</group>
     </rule>
 </group>
